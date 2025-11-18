@@ -160,3 +160,91 @@
   color: #666;
 }
 
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .friends-main {
+    flex-direction: column;
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .friends-sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+    order: 2;
+  }
+
+  .friends-chat-area {
+    order: 1;
+    height: calc(100vh - 200px);
+    min-height: 400px;
+  }
+
+  .friends-sidebar h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+  }
+
+  .friend-item {
+    padding: 10px;
+    margin-bottom: 6px;
+  }
+
+  .friend-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .friend-name {
+    font-size: 14px;
+  }
+
+  .friend-username {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .friends-main {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .friends-sidebar {
+    max-height: 180px;
+    padding: 15px;
+  }
+
+  .friends-chat-area {
+    height: calc(100vh - 180px);
+    min-height: 350px;
+  }
+
+  .friends-sidebar h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .friend-item {
+    padding: 8px;
+    margin-bottom: 4px;
+  }
+
+  .friend-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .friend-name {
+    font-size: 13px;
+  }
+
+  .friend-username {
+    font-size: 11px;
+  }
+}
+
