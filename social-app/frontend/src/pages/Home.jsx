@@ -16,6 +16,7 @@ function Home({ user, setUser }) {
   const [openCommentMenu, setOpenCommentMenu] = useState(null) // Format: "postId-commentIndex"
   const [userFriends, setUserFriends] = useState({ ids: [], usernames: [] })
   const [dialog, setDialog] = useState({ isOpen: false, title: '', message: '', type: 'info', onConfirm: null, showCancel: false })
+  const [pendingComment, setPendingComment] = useState(null) // Format: { postId, commentText }
 
   useEffect(() => {
     fetchPosts()
@@ -106,9 +107,27 @@ function Home({ user, setUser }) {
     }
   }
 
-  const handleComment = async (postId, commentText) => {
-    if (!commentText.trim()) return
-    
+  const checkPII = async (text) => {
+    try {
+      const response = await fetch('http://localhost:3000/api/pii/check', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ text })
+      })
+
+      const data = await response.json()
+      return data
+    } catch (err) {
+      console.error('Error checking PII:', err)
+      // If PII check fails, allow comment to be posted (fail open)
+      return { success: true, hasPII: false, detectedPII: [] }
+    }
+  }
+
+  const actuallyPostComment = async (postId, commentText) => {
     try {
       const response = await fetch(`http://localhost:3000/api/posts/${postId}/comment`, {
         method: 'POST',
@@ -122,9 +141,53 @@ function Home({ user, setUser }) {
       if (data.success) {
         // Refresh posts to show new comment
         fetchPosts()
+        setPendingComment(null)
       }
     } catch (err) {
       console.error('Error adding comment:', err)
+    }
+  }
+
+  const handleComment = async (postId, commentText) => {
+    if (!commentText.trim()) return
+    
+    // Check for PII first
+    const piiCheck = await checkPII(commentText)
+
+    if (piiCheck.hasPII && piiCheck.detectedPII && piiCheck.detectedPII.length > 0) {
+      // PII detected - show confirmation dialog
+      // Separate regular PII from "others"
+      const regularPII = piiCheck.detectedPII.filter(pii => pii.type !== 'others')
+      const othersPII = piiCheck.detectedPII.filter(pii => pii.type === 'others')
+      
+      let piiList = regularPII.map(pii => 
+        `• ${pii.type}: "${pii.value}"`
+      ).join('\n')
+      
+      // Add "others" grouped together if any exist (capitalized as "OTHERS")
+      // Deduplicate values to avoid showing the same value multiple times
+      if (othersPII.length > 0) {
+        if (piiList) piiList += '\n'
+        const uniqueOthersValues = [...new Set(othersPII.map(pii => pii.value))]
+        piiList += '• OTHERS: ' + uniqueOthersValues.map(value => `"${value}"`).join(', ')
+      }
+
+      setPendingComment({ postId, commentText })
+      setDialog({
+        isOpen: true,
+        title: 'Potential Sensitive Information Detected. Do you want to continue?',
+        message: piiList,
+        type: 'warning',
+        showCancel: true,
+        confirmText: 'Yes, Comment Anyway',
+        cancelText: 'Cancel',
+        onConfirm: () => {
+          actuallyPostComment(postId, commentText)
+        }
+      })
+    } else {
+      // No PII detected - post comment immediately
+      actuallyPostComment(postId, commentText)
     }
   }
 
@@ -365,7 +428,12 @@ function Home({ user, setUser }) {
 
       <Dialog
         isOpen={dialog.isOpen}
-        onClose={() => setDialog({ ...dialog, isOpen: false })}
+        onClose={() => {
+          setDialog({ ...dialog, isOpen: false })
+          if (pendingComment) {
+            setPendingComment(null)
+          }
+        }}
         title={dialog.title}
         message={dialog.message}
         type={dialog.type}

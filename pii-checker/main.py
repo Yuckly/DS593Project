@@ -139,7 +139,7 @@ def process_anonymization(text, language='en'):
     anonymized_text = anonymizer.anonymize(text=text, analyzer_results=results)
     
     # Prepare detected PII details
-    detected_pii = []
+    detected_pii_raw = []
     for result in results:
         confidence = round(result.score, 2)
         # Preserve DATE_TIME_DOB entities regardless of confidence
@@ -153,13 +153,46 @@ def process_anonymization(text, language='en'):
         # e.g., "DATE_TIME_DOB" becomes "DATE OF BIRTH", "ADDRESS_STRONG" becomes "ADDRESS STRONG"
         entity_type = entity_type.replace('_', ' ')
         
-        detected_pii.append({
+        value = text[result.start:result.end]
+        detected_pii_raw.append({
             'entity_type': entity_type,
-            'value': text[result.start:result.end],
+            'value': value,
             'start': result.start,
             'end': result.end,
             'confidence': confidence
         })
+    
+    # Deduplicate: if the same value is detected multiple times (at same or overlapping positions), 
+    # keep only the highest confidence one, preferring non-"others" types
+    # Sort by confidence descending to process high-confidence detections first
+    detected_pii_raw.sort(key=lambda x: (x['confidence'], 0 if x['entity_type'] != 'others' else 1), reverse=True)
+    
+    deduplicated = []
+    seen_values = set()
+    
+    for pii in detected_pii_raw:
+        # Create a key based on value and position (allow some overlap tolerance)
+        value_key = pii['value']
+        position_key = (pii['start'], pii['end'])
+        
+        # Check if we've already seen this exact value at this exact position
+        if (value_key, position_key) in seen_values:
+            continue
+        
+        # Check for overlapping detections with the same value
+        is_duplicate = False
+        for existing in deduplicated:
+            # If same value and positions overlap significantly, it's a duplicate
+            if (existing['value'] == value_key and 
+                not (pii['end'] <= existing['start'] or pii['start'] >= existing['end'])):
+                is_duplicate = True
+                break
+        
+        if not is_duplicate:
+            deduplicated.append(pii)
+            seen_values.add((value_key, position_key))
+    
+    detected_pii = deduplicated
     
     return {
         'original_text': text,

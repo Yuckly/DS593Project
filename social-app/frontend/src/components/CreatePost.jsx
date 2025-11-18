@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Dialog from './Dialog'
 import './CreatePost.css'
 
 function CreatePost({ onClose, onPostCreated }) {
@@ -8,6 +9,8 @@ function CreatePost({ onClose, onPostCreated }) {
   const [mediaPreview, setMediaPreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [dialog, setDialog] = useState({ isOpen: false, title: '', message: '', type: 'info', showCancel: false, onConfirm: null })
+  const [pendingPost, setPendingPost] = useState(null)
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
@@ -21,17 +24,36 @@ function CreatePost({ onClose, onPostCreated }) {
     }
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const checkPII = async (text) => {
+    try {
+      const response = await fetch('http://localhost:3000/api/pii/check', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ text })
+      })
+
+      const data = await response.json()
+      return data
+    } catch (err) {
+      console.error('Error checking PII:', err)
+      // If PII check fails, allow post to be created (fail open)
+      return { success: true, hasPII: false, detectedPII: [] }
+    }
+  }
+
+  const actuallyCreatePost = async (postCaption, postCategory, postMedia) => {
     setError('')
     setLoading(true)
 
     try {
       const formData = new FormData()
-      formData.append('caption', caption)
-      formData.append('category', category)
-      if (media) {
-        formData.append('media', media)
+      formData.append('caption', postCaption)
+      formData.append('category', postCategory)
+      if (postMedia) {
+        formData.append('media', postMedia)
       }
 
       const response = await fetch('http://localhost:3000/api/posts', {
@@ -47,6 +69,7 @@ function CreatePost({ onClose, onPostCreated }) {
         setCategory('thoughts')
         setMedia(null)
         setMediaPreview(null)
+        setPendingPost(null)
         if (onPostCreated) {
           onPostCreated()
         }
@@ -62,6 +85,55 @@ function CreatePost({ onClose, onPostCreated }) {
     }
   }
 
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!caption.trim() && !media) return
+
+    const captionText = caption.trim()
+    
+    // Check for PII in caption if it exists
+    if (captionText) {
+      const piiCheck = await checkPII(captionText)
+
+      if (piiCheck.hasPII && piiCheck.detectedPII && piiCheck.detectedPII.length > 0) {
+        // PII detected - show confirmation dialog
+        // Separate regular PII from "others"
+        const regularPII = piiCheck.detectedPII.filter(pii => pii.type !== 'others')
+        const othersPII = piiCheck.detectedPII.filter(pii => pii.type === 'others')
+        
+        let piiList = regularPII.map(pii => 
+          `• ${pii.type}: "${pii.value}"`
+        ).join('\n')
+        
+        // Add "others" grouped together if any exist (capitalized as "OTHERS")
+        // Deduplicate values to avoid showing the same value multiple times
+        if (othersPII.length > 0) {
+          if (piiList) piiList += '\n'
+          const uniqueOthersValues = [...new Set(othersPII.map(pii => pii.value))]
+          piiList += '• OTHERS: ' + uniqueOthersValues.map(value => `"${value}"`).join(', ')
+        }
+
+        setPendingPost({ caption: captionText, category, media })
+        setDialog({
+          isOpen: true,
+          title: 'Potential Sensitive Information Detected. Do you want to continue?',
+          message: piiList,
+          type: 'warning',
+          showCancel: true,
+          confirmText: 'Yes, Post Anyway',
+          cancelText: 'Cancel',
+          onConfirm: () => {
+            actuallyCreatePost(captionText, category, media)
+          }
+        })
+        return
+      }
+    }
+
+    // No PII detected - create post immediately
+    actuallyCreatePost(captionText, category, media)
+  }
+
   const handleRemoveMedia = () => {
     setMedia(null)
     setMediaPreview(null)
@@ -69,6 +141,22 @@ function CreatePost({ onClose, onPostCreated }) {
 
   return (
     <div className="create-post-overlay" onClick={onClose}>
+      <Dialog
+        isOpen={dialog.isOpen}
+        onClose={() => {
+          setDialog({ ...dialog, isOpen: false })
+          if (pendingPost) {
+            setPendingPost(null)
+          }
+        }}
+        title={dialog.title}
+        message={dialog.message}
+        type={dialog.type}
+        showCancel={dialog.showCancel || false}
+        confirmText={dialog.confirmText || 'OK'}
+        cancelText={dialog.cancelText || 'Cancel'}
+        onConfirm={dialog.onConfirm || null}
+      />
       <div className="create-post-modal" onClick={(e) => e.stopPropagation()}>
         <div className="create-post-header">
           <h2>Create New Post</h2>
