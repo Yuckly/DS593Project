@@ -38,6 +38,40 @@ address_recognizer = PatternRecognizer(
 # Register the address recognizer with Presidio
 analyzer.registry.add_recognizer(address_recognizer)
 
+# Create a custom DOB (Date of Birth) recognizer
+# Pattern matches various date formats
+dob_pattern1 = Pattern(
+    name="dob_pattern1",
+    regex=r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b",  # e.g. 01/02/2000, 1-2-00
+    score=0.3  # low base score so context matters
+)
+# Using case-insensitive flag (?i) at the start
+dob_pattern2 = Pattern(
+    name="dob_pattern2",
+    regex=r"(?i)\b(jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|september|oct|october|nov|november|dec|december)\s+\d{1,2},?\s+\d{2,4}\b",
+    score=0.3
+)
+
+dob_recognizer = PatternRecognizer(
+    supported_entity="DATE_TIME_DOB",  # your custom entity type
+    patterns=[dob_pattern1, dob_pattern2],
+    context=[
+        "dob",
+        "date of birth",
+        "birth date",
+        "birthdate",
+        "birthday",
+        "bday",
+        "born",
+        "my birthday",
+        "i was born",
+        "year of birth"
+    ]
+)
+
+# Register the custom DOB recognizer with Presidio
+analyzer.registry.add_recognizer(dob_recognizer)
+
 # Initialize the anonymizer
 anonymizer = AnonymizerEngine()
 
@@ -77,6 +111,11 @@ def analyze_with_dob_only(text, language='en'):
         # Skip excluded entity types
         if r.entity_type in excluded_entities:
             continue
+        
+        # Keep DATE_TIME_DOB entities (from custom recognizer)
+        if r.entity_type == "DATE_TIME_DOB":
+            filtered.append(r)
+            continue
             
         # Handle DATE_TIME - only keep if in DOB context
         if r.entity_type == "DATE_TIME":
@@ -103,8 +142,12 @@ def process_anonymization(text, language='en'):
     detected_pii = []
     for result in results:
         confidence = round(result.score, 2)
-        # If confidence is below 0.4, categorize as "others"
-        entity_type = result.entity_type if confidence >= 0.4 else "others"
+        # Preserve DATE_TIME_DOB entities regardless of confidence
+        # For other entities, if confidence is below 0.4, categorize as "others"
+        if result.entity_type == "DATE_TIME_DOB":
+            entity_type = result.entity_type
+        else:
+            entity_type = result.entity_type if confidence >= 0.4 else "others"
         
         # Replace underscores with spaces in entity type names
         # e.g., "DATE_TIME_DOB" becomes "DATE OF BIRTH", "ADDRESS_STRONG" becomes "ADDRESS STRONG"
