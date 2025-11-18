@@ -1,0 +1,162 @@
+.friends-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+}
+
+.friends-main {
+  display: flex;
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 20px;
+  gap: 20px;
+}
+
+.friends-sidebar {
+  width: 300px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  padding: 20px;
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.friends-sidebar h3 {
+  margin: 0 0 20px 0;
+  color: #2c3e50;
+  font-size: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #f2f2f2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-search-friends {
+  background: linear-gradient(150deg, #26B99A 10%, #18bc9c 90%);
+  color: white;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.btn-search-friends:hover {
+  background: linear-gradient(150deg, #18bc9c 10%, #26B99A 90%);
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(38, 185, 154, 0.3);
+}
+
+.friends-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.friend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 8px;
+}
+
+.friend-item:hover {
+  background-color: #f0f0f0;
+}
+
+.friend-item.active {
+  background-color: #e8f5e9;
+  border-left: 3px solid #26B99A;
+}
+
+.friend-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: linear-gradient(150deg, #26B99A 10%, #18bc9c 90%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.friend-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.friend-name {
+  font-weight: 600;
+  color: #262626;
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+
+.friend-username {
+  color: #999;
+  font-size: 13px;
+}
+
+.no-friends {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.no-friends p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.friends-chat-area {
+  flex: 1;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+}
+
+.no-chat-selected {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+}
+
+.no-chat-selected p {
+  margin: 0;
+  font-size: 16px;
+}
+
+.loading {
+  text-align: center;
+  padding: 100px 20px;
+  font-size: 18px;
+  color: #666;
+}
+

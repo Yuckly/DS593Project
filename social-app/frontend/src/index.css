@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css?family=Product+Sans');
+
+:root {
+  font-family: 'Product Sans', Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #2c3e50;
+  background-color: #f8f9fa;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  color: #2c3e50;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: #26B99A;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #18bc9c;
+  text-decoration: underline;
+}

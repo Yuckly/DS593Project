@@ -1,0 +1,166 @@
+.notifications-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.notifications-modal {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.notifications-header {
+  padding: 20px;
+  border-bottom: 1px solid #f2f2f2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.notifications-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 20px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+}
+
+.close-btn:hover {
+  color: #2c3e50;
+}
+
+.notifications-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.notifications-section {
+  margin-bottom: 30px;
+}
+
+.notifications-section h4 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px;
+  border-bottom: 1px solid #f2f2f2;
+}
+
+.notification-item.friend-request {
+  flex-direction: column;
+  gap: 15px;
+}
+
+.notification-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+}
+
+.notification-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(150deg, #26B99A 10%, #18bc9c 90%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.notification-message {
+  color: #262626;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.notification-time {
+  color: #999;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.notification-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-accept {
+  background: linear-gradient(150deg, #26B99A 10%, #18bc9c 90%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.btn-accept:hover {
+  background: linear-gradient(150deg, #18bc9c 10%, #26B99A 90%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(38, 185, 154, 0.3);
+}
+
+.btn-reject {
+  background: #f0f0f0;
+  color: #666;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.btn-reject:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.loading-text,
+.no-notifications {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+
