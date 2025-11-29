@@ -1,26 +1,24 @@
-{
-  "routes": [
-    {
-      "path": "/api/posts",
-      "method": "POST",
-      "fields": ["title", "caption"],
-      "action": "both",
-      "check_type": ["US_SSN", "CREDIT_CARD"]
-    },
-    {
-      "path": "/api/posts/:postId/comment",
-      "method": "POST",
-      "fields": ["text"],
-      "action": "both",
-      "check_type": ["US_SSN", "CREDIT_CARD"]
-    },
-    {
-      "path": "/api/friends/messages",
-      "method": "POST",
-      "fields": ["text"],
-      "action": "warn",
-      "check_type": ["US_SSN", "CREDIT_CARD", "IBAN_CODE", "US_PASSPORT"]
-    }
-  ]
-}
+[
+  {
+    "path": "/api/posts",
+    "method": "POST",
+    "fields": ["title", "caption"],
+    "action": "both",
+    "check_type": ["US_SSN", "CREDIT_CARD"]
+  },
+  {
+    "path": "/api/posts/:postId/comment",
+    "method": "POST",
+    "fields": ["text"],
+    "action": "both",
+    "check_type": ["US_SSN", "CREDIT_CARD"]
+  },
+  {
+    "path": "/api/friends/messages",
+    "method": "POST",
+    "fields": ["text"],
+    "action": "warn",
+    "check_type": ["US_SSN", "CREDIT_CARD", "IBAN_CODE", "US_PASSPORT"]
+  }
+]
 

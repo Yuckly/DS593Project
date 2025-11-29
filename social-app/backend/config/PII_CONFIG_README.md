@@ -88,25 +88,25 @@ The `pii-config.json` file controls which routes are checked for PII and how det
 
 ### Configuration Structure
 
+The `pii-config.json` file is a JSON array of route configurations:
+
 ```json
-{
-  "routes": [
-    {
-      "path": "/api/posts",
-      "method": "POST",
-      "fields": ["title", "caption"],
-      "action": "warn",
-      "check_type": ["US_SSN", "CREDIT_CARD"]
-    }
-  ]
-}
+[
+  {
+    "path": "/api/posts",
+    "method": "POST",
+    "fields": ["title", "caption"],
+    "action": "warn",
+    "check_type": ["US_SSN", "CREDIT_CARD"]
+  }
+]
 ```
 
 **Note**: The PII checker URL is configured via the `PII_CHECKER_URL` environment variable. See [Environment Variables](#environment-variables) below.
 
 ### Route Configuration Fields
 
-Each route in the `routes` array requires the following fields:
+Each route configuration object in the array requires the following fields:
 
 #### `path` (string, required)
 - The API route path to check
@@ -159,38 +159,36 @@ Each route in the `routes` array requires the following fields:
 ### Example Configuration
 
 ```json
-{
-  "routes": [
-    {
-      "path": "/api/posts",
-      "method": "POST",
-      "fields": ["title"],
-      "action": "warn",
-      "check_type": ["US_SSN", "CREDIT_CARD"]
-    },
-    {
-      "path": "/api/posts",
-      "method": "POST",
-      "fields": ["caption"],
-      "action": "block",
-      "check_type": ["US_SSN", "CREDIT_CARD"]
-    },
-    {
-      "path": "/api/posts/:postId/comment",
-      "method": "POST",
-      "fields": ["text"],
-      "action": "both",
-      "check_type": ["US_SSN", "CREDIT_CARD"]
-    },
-    {
-      "path": "/api/friends/messages",
-      "method": "POST",
-      "fields": ["text"],
-      "action": "warn",
-      "check_type": ["US_SSN", "CREDIT_CARD", "IBAN_CODE", "US_PASSPORT", "EMAIL_ADDRESS", "DATE_TIME_DOB"]
-    }
-  ]
-}
+[
+  {
+    "path": "/api/posts",
+    "method": "POST",
+    "fields": ["title"],
+    "action": "warn",
+    "check_type": ["US_SSN", "CREDIT_CARD"]
+  },
+  {
+    "path": "/api/posts",
+    "method": "POST",
+    "fields": ["caption"],
+    "action": "block",
+    "check_type": ["US_SSN", "CREDIT_CARD"]
+  },
+  {
+    "path": "/api/posts/:postId/comment",
+    "method": "POST",
+    "fields": ["text"],
+    "action": "both",
+    "check_type": ["US_SSN", "CREDIT_CARD"]
+  },
+  {
+    "path": "/api/friends/messages",
+    "method": "POST",
+    "fields": ["text"],
+    "action": "warn",
+    "check_type": ["US_SSN", "CREDIT_CARD", "IBAN_CODE", "US_PASSPORT", "EMAIL_ADDRESS", "DATE_TIME_DOB"]
+  }
+]
 ```
 
 **Note**: Set the `PII_CHECKER_URL` environment variable to configure the PII checker server URL.
@@ -306,24 +304,22 @@ To determine which fields to check, examine the request body structure:
 
 4. **Separate configurations for different fields with different actions:**
    ```json
-   {
-     "routes": [
-       {
-         "path": "/api/posts",
-         "method": "POST",
-         "fields": ["title"],
-         "action": "warn",
-         "check_type": ["US_SSN"]
-       },
-       {
-         "path": "/api/posts",
-         "method": "POST",
-         "fields": ["caption"],
-         "action": "block",
-         "check_type": ["CREDIT_CARD", "EMAIL_ADDRESS"]
-       }
-     ]
-   }
+   [
+     {
+       "path": "/api/posts",
+       "method": "POST",
+       "fields": ["title"],
+       "action": "warn",
+       "check_type": ["US_SSN"]
+     },
+     {
+       "path": "/api/posts",
+       "method": "POST",
+       "fields": ["caption"],
+       "action": "block",
+       "check_type": ["CREDIT_CARD", "EMAIL_ADDRESS"]
+     }
+   ]
    ```
 
 #### Comment Creation (`POST /api/posts/:postId/comment`)

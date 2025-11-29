@@ -106,7 +106,8 @@ function hasBlockedPII(detectedPII, blockedTypes) {
 const PIIChecker = async (req, res, next) => {
   try {
     // Find ALL matching route configurations (support multiple configs for same path/method)
-    const matchingRoutes = piiConfig.routes.filter(route => {
+    // piiConfig is now an array directly
+    const matchingRoutes = piiConfig.filter(route => {
       const methodMatches = route.method === req.method;
       const pathMatches = matchRoute(req, route.path);
       return methodMatches && pathMatches;
