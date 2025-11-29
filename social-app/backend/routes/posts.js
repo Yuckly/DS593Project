@@ -5,7 +5,6 @@ const Post = require('../models/Post');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const PIIChecker = require('../middleware/PIIChecker');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -40,7 +39,7 @@ const upload = multer({
 });
 
 // POST /api/posts - Create a new post
-router.post('/', upload.single('media'), PIIChecker, async (req, res) => {
+router.post('/', upload.single('media'), async (req, res) => {
   try {
     if (!req.session.userId) {
       return res.status(401).json({ error: 'Not authenticated' });
@@ -145,7 +144,7 @@ router.post('/:postId/like', async (req, res) => {
 });
 
 // POST /api/posts/:postId/comment - Add a comment to a post
-router.post('/:postId/comment', PIIChecker, async (req, res) => {
+router.post('/:postId/comment', async (req, res) => {
   try {
     if (!req.session.userId) {
       return res.status(401).json({ error: 'Not authenticated' });

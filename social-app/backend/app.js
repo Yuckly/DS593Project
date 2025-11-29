@@ -4,6 +4,7 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const path = require('path');
 const connectDB = require('./config/database');
+const PIIChecker = require('./middleware/PIIChecker');
 
 const app = express();
 
@@ -28,6 +29,10 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
+
+// Global PII checker middleware
+// Applies PII checks based on `pii-config.json` to any matching route
+app.use(PIIChecker);
 
 // Serve static files from public directory
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
