@@ -33,12 +33,25 @@ npm install
 
 3. Make sure MongoDB is running (on localhost:27017)
 
-4. Start the backend server:
+4. (Optional) Set environment variables:
+```bash
+# PII Checker URL (default: http://localhost:12423/anonymize)
+export PII_CHECKER_URL=http://localhost:12423/anonymize
+```
+
+Or create a `.env` file in the backend directory:
+```
+PII_CHECKER_URL=http://localhost:12423/anonymize
+```
+
+5. Start the backend server:
 ```bash
 npm start
 ```
 
 Backend will run on `http://localhost:3000`
+
+**Note**: For PII checking configuration, see `backend/config/PII_CONFIG_README.md`
 
 ### Frontend Setup
 

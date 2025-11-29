@@ -14,6 +14,10 @@ try {
   throw new Error('Failed to load PII configuration');
 }
 
+// Get PII checker URL from environment variable (default to localhost)
+const PII_CHECKER_URL = process.env.PII_CHECKER_URL || 'http://localhost:12423/anonymize';
+const PII_CHECKER_TIMEOUT = 5000; // Default timeout in milliseconds
+
 /**
  * Match route path with config path pattern
  * Handles parameterized routes like /api/posts/:postId/comment
@@ -134,13 +138,13 @@ const PIIChecker = async (req, res, next) => {
       // Call the PII checker
       try {
         const response = await axios.post(
-          piiConfig.piiCheckerUrl,
+          PII_CHECKER_URL,
           {
             text: combinedText,
             language: 'en'
           },
           {
-            timeout: piiConfig.timeout || 5000
+            timeout: PII_CHECKER_TIMEOUT
           }
         );
 

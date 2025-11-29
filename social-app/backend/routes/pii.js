@@ -12,7 +12,7 @@ router.post('/check', async (req, res) => {
     }
 
     // Call the Python Presidio server
-    const presidioUrl = 'http://localhost:12423/anonymize';
+    const presidioUrl = process.env.PII_CHECKER_URL || 'http://localhost:12423/anonymize';
     
     try {
       const response = await axios.post(presidioUrl, {

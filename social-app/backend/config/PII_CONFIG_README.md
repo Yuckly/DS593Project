@@ -79,7 +79,8 @@ Server will be available at http://localhost:12423
 
 - The PII checker server **must be running** before starting the backend server
 - If the PII checker is unavailable, the middleware will log an error but allow requests through (fail-open behavior)
-- The timeout for PII checks is configurable in `pii-config.json` (default: 5000ms)
+- The PII checker URL is configured via the `PII_CHECKER_URL` environment variable (default: `http://localhost:12423/anonymize`)
+- The timeout for PII checks is fixed at 5000ms (5 seconds)
 
 ## Configuring Routes in pii-config.json
 
@@ -97,12 +98,11 @@ The `pii-config.json` file controls which routes are checked for PII and how det
       "action": "warn",
       "check_type": ["US_SSN", "CREDIT_CARD"]
     }
-  ],
-  "piiCheckerUrl": "http://localhost:12423/anonymize",
-  "timeout": 5000,
-  "availableEntityTypes": { ... }
+  ]
 }
 ```
+
+**Note**: The PII checker URL is configured via the `PII_CHECKER_URL` environment variable. See [Environment Variables](#environment-variables) below.
 
 ### Route Configuration Fields
 
@@ -141,32 +141,20 @@ Each route in the `routes` array requires the following fields:
 #### `check_type` (array, required)
 - List of specific PII entity types to check for this route
 - Only PII types in this list will trigger the action
-- Use entity types from `availableEntityTypes` (see below)
+- Use entity types from `pii-entity-types.md` (see [Available PII Entity Types](#available-pii-entity-types) section)
 - Examples:
   - `["US_SSN", "CREDIT_CARD"]` - Only check for SSN and credit cards
   - `["US_SSN", "CREDIT_CARD", "IBAN_CODE", "EMAIL_ADDRESS"]` - Check multiple types
 
-### Global Configuration
+### Environment Variables
 
-#### `piiCheckerUrl` (string)
+#### `PII_CHECKER_URL` (string, optional)
 - URL of the PII checker server endpoint
 - Default: `"http://localhost:12423/anonymize"`
-- Change this if the PII checker runs on a different host/port
+- Set this environment variable if the PII checker runs on a different host/port
+- Example: `PII_CHECKER_URL=http://localhost:12423/anonymize`
 
-#### `timeout` (number)
-- Request timeout in milliseconds for PII checker calls
-- Default: `5000` (5 seconds)
-- Increase if PII checks are timing out
-
-#### `availableEntityTypes` (object)
-- Reference list of all available PII entity types
-- **Note**: This is for reference only and does not affect functionality
-- Categories:
-  - `custom` - Custom entity types (DATE_TIME_DOB, ADDRESS)
-  - `presidio_global` - Global Presidio entities
-  - `presidio_usa`, `presidio_uk`, etc. - Country-specific entities
-  - `filtered_out` - Entities that are filtered out by the Python server
-  - `special` - Special categories (e.g., "others" for low-confidence matches)
+**Note**: The timeout for PII checker calls is fixed at 5000ms (5 seconds) and cannot be configured.
 
 ### Example Configuration
 
@@ -201,11 +189,11 @@ Each route in the `routes` array requires the following fields:
       "action": "warn",
       "check_type": ["US_SSN", "CREDIT_CARD", "IBAN_CODE", "US_PASSPORT", "EMAIL_ADDRESS", "DATE_TIME_DOB"]
     }
-  ],
-  "piiCheckerUrl": "http://localhost:12423/anonymize",
-  "timeout": 5000
+  ]
 }
 ```
+
+**Note**: Set the `PII_CHECKER_URL` environment variable to configure the PII checker server URL.
 
 ### Multiple Configurations for Same Route
 
@@ -524,6 +512,8 @@ If fields aren't being checked:
 ## Available PII Entity Types
 
 The following entity types are available for use in `check_type` arrays. Use the exact names as shown (with underscores).
+
+**Note**: For a complete reference of all available entity types, see `pii-entity-types.md` in the same directory.
 
 ### Custom Entity Types
 - `DATE_TIME_DOB` - Date of birth (dates in DOB context)
