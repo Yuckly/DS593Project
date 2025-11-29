@@ -76,8 +76,9 @@ function CreatePost({ onClose, onPostCreated }) {
       if (!response.ok && data.piiDetected) {
         setLoading(false)
         
-        // If user already tried to continue and still got 400, silently fail
+        // If user already tried to continue and still got 400, close modal and return to home
         if (bypassWarning) {
+          onClose()
           return
         }
         
@@ -152,6 +153,8 @@ function CreatePost({ onClose, onPostCreated }) {
           setDialog({ ...dialog, isOpen: false })
           if (pendingPost) {
             setPendingPost(null)
+            // If PII check failed, close modal and return to home
+            onClose()
           }
         }}
         title={dialog.title}
