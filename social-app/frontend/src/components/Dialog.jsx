@@ -25,7 +25,7 @@ function Dialog({ isOpen, onClose, title, message, type = 'info', onConfirm, con
         </div>
         <div className="dialog-content">
           {title && <h3 className="dialog-title">{title}</h3>}
-          <div className="dialog-message" style={{ whiteSpace: 'pre-line' }}>{message}</div>
+          {message && message.trim() && <div className="dialog-message" style={{ whiteSpace: 'pre-line' }}>{message}</div>}
         </div>
         <div className="dialog-actions">
           {showCancel && (

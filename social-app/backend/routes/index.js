@@ -35,6 +35,7 @@ router.get('/home', async (req, res) => {
           _id: post._id,
           author: post.author,
           authorID: post.authorID._id || post.authorID,
+          title: post.title,
           caption: post.caption,
           category: post.category,
           static_url: post.static_url,

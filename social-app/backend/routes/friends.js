@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Message = require('../models/Message');
+const PIIChecker = require('../middleware/PIIChecker');
 
 // GET /api/friends - Get friends list
 router.get('/', async (req, res) => {
@@ -50,7 +51,7 @@ router.get('/messages/:friendId', async (req, res) => {
 });
 
 // POST /api/friends/messages - Send a message
-router.post('/messages', async (req, res) => {
+router.post('/messages', PIIChecker, async (req, res) => {
   try {
     if (!req.session.userId) {
       return res.status(401).json({ error: 'Not authenticated' });

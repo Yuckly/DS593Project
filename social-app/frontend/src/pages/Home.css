@@ -330,6 +330,15 @@
   margin-bottom: 12px;
 }
 
+.post-title {
+  margin: 0 0 8px 0;
+  color: #262626;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
 .caption-text {
   margin: 0 0 8px 0;
   color: #262626;

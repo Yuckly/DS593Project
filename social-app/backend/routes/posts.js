@@ -5,7 +5,7 @@ const Post = require('../models/Post');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const blockSensitivePII = require('../middleware/blockSensitivePII');
+const PIIChecker = require('../middleware/PIIChecker');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -40,7 +40,7 @@ const upload = multer({
 });
 
 // POST /api/posts - Create a new post
-router.post('/', upload.single('media'), blockSensitivePII, async (req, res) => {
+router.post('/', upload.single('media'), PIIChecker, async (req, res) => {
   try {
     if (!req.session.userId) {
       return res.status(401).json({ error: 'Not authenticated' });
@@ -51,7 +51,7 @@ router.post('/', upload.single('media'), blockSensitivePII, async (req, res) => 
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const { caption, category } = req.body;
+    const { title, caption, category } = req.body;
     
     // Determine file type
     let fileType = null;
@@ -71,6 +71,7 @@ router.post('/', upload.single('media'), blockSensitivePII, async (req, res) => 
     const post = new Post({
       author: `${user.firstName} ${user.lastName}`,
       authorID: user._id,
+      title: title || '',
       caption: caption || '',
       category: category || 'thoughts',
       static_url: staticUrl,
@@ -86,6 +87,7 @@ router.post('/', upload.single('media'), blockSensitivePII, async (req, res) => 
       post: {
         _id: post._id,
         author: post.author,
+        title: post.title,
         caption: post.caption,
         category: post.category,
         static_url: post.static_url,
@@ -143,7 +145,7 @@ router.post('/:postId/like', async (req, res) => {
 });
 
 // POST /api/posts/:postId/comment - Add a comment to a post
-router.post('/:postId/comment', blockSensitivePII, async (req, res) => {
+router.post('/:postId/comment', PIIChecker, async (req, res) => {
   try {
     if (!req.session.userId) {
       return res.status(401).json({ error: 'Not authenticated' });

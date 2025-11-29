@@ -107,88 +107,78 @@ function Home({ user, setUser }) {
     }
   }
 
-  const checkPII = async (text) => {
+  const actuallyPostComment = async (data, bypassWarning = false) => {
     try {
-      const response = await fetch('http://localhost:3000/api/pii/check', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ text })
-      })
-
-      const data = await response.json()
-      return data
-    } catch (err) {
-      console.error('Error checking PII:', err)
-      // If PII check fails, allow comment to be posted (fail open)
-      return { success: true, hasPII: false, detectedPII: [] }
-    }
-  }
-
-  const actuallyPostComment = async (postId, commentText) => {
-    try {
-      const response = await fetch(`http://localhost:3000/api/posts/${postId}/comment`, {
+      const response = await fetch(`http://localhost:3000/api/posts/${data.postId}/comment`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ text: commentText })
+        body: JSON.stringify({
+          text: data.text,
+          ...(bypassWarning && { bypassPIIWarning: 'true' })
+        })
       })
-      const data = await response.json()
-      if (data.success) {
+      
+      const responseData = await response.json()
+
+      // Handle 400 error (PII detected)
+      if (!response.ok && responseData.piiDetected) {
+        // If user already tried to continue and still got 400, silently fail
+        if (bypassWarning) {
+          setPendingComment(null)
+          return
+        }
+        
+        // Show warning dialog with option to continue
+        setPendingComment(data)
+        setDialog({
+          isOpen: true,
+          title: responseData.error || 'Potential Person Identifiable Information Detected. Are you sure you want to continue?',
+          message: '',
+          type: 'warning',
+          showCancel: true,
+          confirmText: 'Yes, Continue',
+          cancelText: 'Cancel',
+          onConfirm: () => {
+            // Retry with bypass flag
+            actuallyPostComment(data, true)
+          }
+        })
+        return
+      }
+
+      if (responseData.success) {
         // Refresh posts to show new comment
         fetchPosts()
         setPendingComment(null)
+      } else {
+        setDialog({
+          isOpen: true,
+          title: 'Error',
+          message: responseData.error || 'Failed to add comment',
+          type: 'error',
+          showCancel: false
+        })
       }
     } catch (err) {
       console.error('Error adding comment:', err)
+      setDialog({
+        isOpen: true,
+        title: 'Error',
+        message: 'Error adding comment. Please try again.',
+        type: 'error',
+        showCancel: false
+      })
     }
   }
 
   const handleComment = async (postId, commentText) => {
     if (!commentText.trim()) return
     
-    // Check for PII first
-    const piiCheck = await checkPII(commentText)
-
-    if (piiCheck.hasPII && piiCheck.detectedPII && piiCheck.detectedPII.length > 0) {
-      // PII detected - show confirmation dialog
-      // Separate regular PII from "others"
-      const regularPII = piiCheck.detectedPII.filter(pii => pii.type !== 'others')
-      const othersPII = piiCheck.detectedPII.filter(pii => pii.type === 'others')
-      
-      let piiList = regularPII.map(pii => 
-        `• ${pii.type}: "${pii.value}"`
-      ).join('\n')
-      
-      // Add "others" grouped together if any exist (capitalized as "OTHERS")
-      // Deduplicate values to avoid showing the same value multiple times
-      if (othersPII.length > 0) {
-        if (piiList) piiList += '\n'
-        const uniqueOthersValues = [...new Set(othersPII.map(pii => pii.value))]
-        piiList += '• OTHERS: ' + uniqueOthersValues.map(value => `"${value}"`).join(', ')
-      }
-
-      setPendingComment({ postId, commentText })
-      setDialog({
-        isOpen: true,
-        title: 'Potential Sensitive Information Detected. Do you want to continue?',
-        message: piiList,
-        type: 'warning',
-        showCancel: true,
-        confirmText: 'Yes, Comment Anyway',
-        cancelText: 'Cancel',
-        onConfirm: () => {
-          actuallyPostComment(postId, commentText)
-        }
-      })
-    } else {
-      // No PII detected - post comment immediately
-      actuallyPostComment(postId, commentText)
-    }
+    // Send comment - backend middleware will handle PII checking
+    actuallyPostComment({ postId, text: commentText })
   }
 
   const handleDeletePost = async (postId) => {
@@ -535,6 +525,11 @@ function Home({ user, setUser }) {
 
                 <div className="gram-card-content">
                   <div className="gram-card-caption">
+                    {item.post.title && item.post.title.trim() && (
+                      <h3 className="post-title">
+                        {item.post.title}
+                      </h3>
+                    )}
                     {item.post.caption && (
                       <p className="caption-text">
                         {item.post.caption}

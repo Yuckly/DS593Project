@@ -3,6 +3,7 @@ import Dialog from './Dialog'
 import './CreatePost.css'
 
 function CreatePost({ onClose, onPostCreated }) {
+  const [title, setTitle] = useState('')
   const [caption, setCaption] = useState('')
   const [category, setCategory] = useState('thoughts')
   const [media, setMedia] = useState(null)
@@ -44,16 +45,23 @@ function CreatePost({ onClose, onPostCreated }) {
     }
   }
 
-  const actuallyCreatePost = async (postCaption, postCategory, postMedia) => {
+  const actuallyCreatePost = async (postData, bypassWarning = false) => {
     setError('')
     setLoading(true)
 
     try {
       const formData = new FormData()
-      formData.append('caption', postCaption)
-      formData.append('category', postCategory)
-      if (postMedia) {
-        formData.append('media', postMedia)
+      
+      // Add all fields from postData object to FormData
+      Object.keys(postData).forEach(key => {
+        if (postData[key] !== null && postData[key] !== undefined) {
+          formData.append(key, postData[key])
+        }
+      })
+      
+      // Add flag to bypass warning if user confirmed
+      if (bypassWarning) {
+        formData.append('bypassPIIWarning', 'true')
       }
 
       const response = await fetch('http://localhost:3000/api/posts', {
@@ -64,7 +72,35 @@ function CreatePost({ onClose, onPostCreated }) {
 
       const data = await response.json()
 
+      // Handle 400 error (PII detected)
+      if (!response.ok && data.piiDetected) {
+        setLoading(false)
+        
+        // If user already tried to continue and still got 400, silently fail
+        if (bypassWarning) {
+          return
+        }
+        
+        // Show warning dialog with option to continue
+        setPendingPost(postData)
+        setDialog({
+          isOpen: true,
+          title: data.error || 'Potential Person Identifiable Information Detected. Are you sure you want to continue?',
+          message: '',
+          type: 'warning',
+          showCancel: true,
+          confirmText: 'Yes, Continue',
+          cancelText: 'Cancel',
+          onConfirm: () => {
+            // Retry with bypass flag
+            actuallyCreatePost(postData, true)
+          }
+        })
+        return
+      }
+
       if (data.success) {
+        setTitle('')
         setCaption('')
         setCategory('thoughts')
         setMedia(null)
@@ -87,51 +123,20 @@ function CreatePost({ onClose, onPostCreated }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!caption.trim() && !media) return
+    if (!title.trim() && !caption.trim() && !media) return
 
+    const titleText = title.trim()
     const captionText = caption.trim()
     
-    // Check for PII in caption if it exists
-    if (captionText) {
-      const piiCheck = await checkPII(captionText)
-
-      if (piiCheck.hasPII && piiCheck.detectedPII && piiCheck.detectedPII.length > 0) {
-        // PII detected - show confirmation dialog
-        // Separate regular PII from "others"
-        const regularPII = piiCheck.detectedPII.filter(pii => pii.type !== 'others')
-        const othersPII = piiCheck.detectedPII.filter(pii => pii.type === 'others')
-        
-        let piiList = regularPII.map(pii => 
-          `• ${pii.type}: "${pii.value}"`
-        ).join('\n')
-        
-        // Add "others" grouped together if any exist (capitalized as "OTHERS")
-        // Deduplicate values to avoid showing the same value multiple times
-        if (othersPII.length > 0) {
-          if (piiList) piiList += '\n'
-          const uniqueOthersValues = [...new Set(othersPII.map(pii => pii.value))]
-          piiList += '• OTHERS: ' + uniqueOthersValues.map(value => `"${value}"`).join(', ')
-        }
-
-        setPendingPost({ caption: captionText, category, media })
-        setDialog({
-          isOpen: true,
-          title: 'Potential Sensitive Information Detected. Do you want to continue?',
-          message: piiList,
-          type: 'warning',
-          showCancel: true,
-          confirmText: 'Yes, Post Anyway',
-          cancelText: 'Cancel',
-          onConfirm: () => {
-            actuallyCreatePost(captionText, category, media)
-          }
-        })
-        return
-      }
+    // Submit directly - backend middleware will handle PII checking
+    // If backend returns warning, it will be handled in actuallyCreatePost
+    const postData = {
+      title: titleText,
+      caption: captionText,
+      category: category,
+      media: media
     }
-
-    // No PII detected - create post immediately
-    actuallyCreatePost(captionText, category, media)
+    actuallyCreatePost(postData)
   }
 
   const handleRemoveMedia = () => {
@@ -171,6 +176,18 @@ function CreatePost({ onClose, onPostCreated }) {
               {error}
             </div>
           )}
+
+          <div className="form-group">
+            <label htmlFor="title">Title</label>
+            <input
+              type="text"
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter post title..."
+              className="form-control"
+            />
+          </div>
 
           <div className="form-group">
             <label htmlFor="caption">What's on your mind?</label>
@@ -251,7 +268,7 @@ function CreatePost({ onClose, onPostCreated }) {
             <button
               type="submit"
               className="btn btn-submit"
-              disabled={loading || (!caption.trim() && !media)}
+              disabled={loading || (!title.trim() && !caption.trim() && !media)}
             >
               {loading ? (
                 <>
